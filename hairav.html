@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAIRAV - Live Markets</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #ff6b35, #f7931e, #ffd23f);
+            padding: 1rem 0;
+            box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
+        }
+
+        .navbar {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #fff, #ffd23f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(255, 210, 63, 0.5);
+            letter-spacing: 3px;
+        }
+
+        .menu-dots {
+            font-size: 2rem;
+            cursor: pointer;
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+
+        .menu-dots:hover {
+            transform: scale(1.2);
+            color: #ffd23f;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .markets-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .markets-header h1 {
+            font-size: 3rem;
+            background: linear-gradient(45deg, #ff6b35, #ffd23f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .live-rates {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .rate-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rate-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .rate-card:hover::before {
+            left: 100%;
+        }
+
+        .rate-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(255, 107, 53, 0.3);
+        }
+
+        .symbol {
+            font-size: 1.2rem;
+            color: #ffd23f;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .price {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00ff88, #00cc6a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .change {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .positive { color: #00ff88; }
+        .negative { color: #ff4757; }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .chart-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chart-title {
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #ffd23f;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+        }
+
+        /* Subscription Plans */
+        .subscription-section {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 3rem;
+            margin-top: 3rem;
+            border: 2px solid rgba(255, 210, 63, 0.3);
+            box-shadow: 0 20px 60px rgba(255, 107, 53, 0.2);
+        }
+
+        .subscription-title {
+            font-size: 2.5rem;
+            text-align: center;
+            background: linear-gradient(45deg, #ffd23f, #ff6b35);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 30px rgba(255, 210, 63, 0.5);
+        }
+
+        .profit-info {
+            text-align: center;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 204, 106, 0.1));
+            padding: 2rem;
+            border-radius: 20px;
+            margin-bottom: 1.5rem;
+            border: 2px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .profit-info h3 {
+            font-size: 1.8rem;
+            color: #00ff88;
+            margin-bottom: 0.5rem;
+        }
+
+        .withdrawal-notice {
+            background: linear-gradient(135deg, rgba(255, 71, 87, 0.2), rgba(255, 107, 53, 0.2));
+            border: 2px solid rgba(255, 71, 87, 0.5);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(255, 71, 87, 0.2);
+        }
+
+        .withdrawal-notice h4 {
+            color: #ff4757;
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .withdrawal-notice p {
+            color: #ffd23f;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .plan-card {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(255, 210, 63, 0.1));
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .plan-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6b35, #ffd23f, #00ff88);
+        }
+
+        .plan-card:hover {
+            transform: translateY(-15px) scale(1.02);
+            border-color: #ffd23f;
+            box-shadow: 0 25px 50px rgba(255, 107, 53, 0.4);
+        }
+
+        .plan-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ffd23f;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .plan-price {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00ff88, #ffd23f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .plan-profit {
+            color: #00ff88;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .plan-multiplier {
+            color: #ff6b35;
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .logo {
+                font-size: 2rem;
+            }
+            
+            .price {
+                font-size: 2rem;
+            }
+            
+            .plans-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 107, 53, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(255, 107, 53, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 107, 53, 0); }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="navbar">
+            <div class="logo">HAIRAV</div>
+            <div class="menu-dots pulse" onclick="toggleSubscription()">
+                <i class="fas fa-ellipsis-v"></i>
+                <i class="fas fa-ellipsis-v" style="position: relative; top: -2px;"></i>
+                <i class="fas fa-ellipsis-v" style="position: relative; top: -4px;"></i>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="markets-header">
+            <h1>Live Markets</h1>
+            <p>Real-time cryptocurrency & forex rates</p>
+        </div>
+
+        <div class="live-rates" id="liveRates">
+            <!-- Rates will be populated by JavaScript -->
+        </div>
+
+        <div class="charts-container">
+            <div class="chart-card">
+                <div class="chart-title">XAUUSD Live Chart</div>
+                <div class="chart-wrapper">
+                    <canvas id="xauusdChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">BTCUSDT Live Chart</div>
+                <div class="chart-wrapper">
+                    <canvas id="btcusdtChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">ETHUSDT Live Chart</div>
+                <div class="chart-wrapper">
+                    <canvas id="ethusdtChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">THETUSDT Live Chart</div>
+                <div class="chart-wrapper">
+                    <canvas id="thetusdtChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subscription Plans Section -->
+        <div class="subscription-section">
+            <div class="subscription-title">
+                <i class="fas fa-crown"></i> HAIRAV Investment Plans
+            </div>
+            
+            <div class="profit-info">
+                <h3>💰 Profit in Form of Rental Income</h3>
+                <p style="font-size: 1.2rem; color: #00ff88;">Guaranteed returns till 3X your investment</p>
+            </div>
+
+            <div class="withdrawal-notice">
+                <h4><i class="fas fa-exclamation-triangle"></i> Withdrawal Policy</h4>
+                <p>Anytime principal withdrawal with <strong>20% deduction</strong></p>
+            </div>
+
+            <div class="plans-grid" id="plansGrid">
+                <!-- Plans populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initial prices
+        const symbols = [
+            { id: 'xauusd', name: 'XAUUSD', price: 4609, change: 2.34 },
+            { id: 'btcusdt', name: 'BTCUSDT', price: 78447, change: -1.23 },
+            { id: 'ethusdt', name: 'ETHUSDT', price: 2311, change: 3.45 },
+            { id: 'thetusdt', name: 'THETUSDT', price: 0.2169, change: -0.87 }
+        ];
+
+        // Subscription plans
+        const plans = [
+            { name: 'MEMBER+', price: 104, profit: '5-10%', multiplier: 'till 3X' },
+            { name: 'PREMIUM', price: 260, profit: '6-12%', multiplier: 'till 3X' },
+            { name: 'Titanium+', price: 520, profit: '8-15%', multiplier: 'till 3X' },
+            { name: 'Standard', price: 1041, profit: '10-16%', multiplier: 'till 3X' },
+            { name: 'ELITE', price: 5208, profit: '12-20%', multiplier: 'till 3X' },
+            { name: 'MILLIONNAIRE', price: 10416, profit: '15-22%', multiplier: 'till 3X' },
+            { name: 'BILLIONAIRE', price: 26041, profit: '17-25%', multiplier: 'till 3X' }
+        ];
+
+        let charts = {};
+        let priceData = {};
+
+        // Initialize
+        function init() {
+            createRateCards();
+            initCharts();
+            createSubscriptionPlans();
+            startPriceUpdates();
+        }
+
+        // Create live rate cards
+        function createRateCards() {
+            const container = document.getElementById('liveRates');
+            symbols.forEach(symbol => {
+                const card = document.createElement('div');
+                card.className = 'rate-card';
+                card.id = `${symbol.id}-card`;
+                card.innerHTML = `
+                    <div class="symbol">${symbol.name}</div>
+                    <div class="price" id="${symbol.id}-price">$${symbol.price.toLocaleString()}</div>
+                    <div class="change ${symbol.change >= 0 ? 'positive' : 'negative'}">
+                        ${symbol.change >= 0 ? '+' : ''}${symbol.change.toFixed(2)}%
+                    </div>
+                `;
+                container.appendChild(card);
+                priceData[symbol.id] = { price: symbol.price, change: symbol.change };
+            });
+        }
+
+        // Initialize charts
+        function initCharts() {
+            symbols.forEach(symbol => {
+                const ctx = document.getElementById(`${symbol.id}Chart`).getContext('2d');
+                charts[symbol.id] = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: `${symbol.name} Price`,
+                            data: [],
+                            borderColor: '#00ff88',
+                            backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                grid: { color: 'rgba(255,255,255,0.1)' },
+                                ticks: { color: '#ccc' }
+                            },
+                            x: {
+                                grid: { color: 'rgba(255,255,255,0.1)' },
+                                ticks: { color: '#ccc' }
+                            }
+                        },
+                        plugins: {
+                            legend: { labels: { color: '#fff' } }
+                        }
+                    }
+                });
+            });
+        }
+
+        // Create subscription plans
+        function createSubscriptionPlans() {
+            const container = document.getElementById('plansGrid');
+            plans.forEach(plan => {
+                const card = document.createElement('div');
+                card.className = 'plan-card';
+                card.innerHTML = `
+                    <div class="plan-name">${plan.name}</div>
+                    <div class="plan-price">$${plan.price.toLocaleString()}</div>
+                    <div class="plan-profit">${plan.profit}% Profit Per Month</div>
+                    <div class="plan-multiplier">${plan.multiplier}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Update prices (simulated live data)
+        function updatePrices() {
+            symbols.forEach(symbol => {
+                const changePercent = (Math.random() - 0.5) * 4; // Random change ±2%
+                const newPrice = priceData[symbol.id].price * (1 + changePercent / 100);
+                
+                priceData[symbol.id].price = newPrice;
+                priceData[symbol.id].change = changePercent;
+
+                // Update rate card
+                const priceEl = document.getElementById(`${symbol.id}-price`);
+                const changeEl = document.querySelector(`#${symbol.id}-card .change`);
+                
+                priceEl.textContent = `$${newPrice.toLocaleString(undefined, {maximumFractionDigits: symbol.id === 'thetusdt' ? 4 : 2})}`;
+                changeEl.textContent = `${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%`;
+                changeEl.className = `change ${changePercent >= 0 ? 'positive' : 'negative'}`;
+
+                // Update chart
+                const now = new Date().toLocaleTimeString();
+                charts[symbol.id].data.labels.push(now);
+                charts[symbol.id].data.datasets[0].data.push(newPrice);
+                
+                // Keep only last 20 points
+                if (charts[symbol.id].data.labels.length > 20) {
+                    charts[symbol.id].data.labels.shift();
+                    charts[symbol.id].data.datasets[0].data.shift();
+                }
+                
+                charts[symbol.id].update('none');
+            });
+        }
+
+        // Start live updates
+        function startPriceUpdates() {
+            updatePrices(); // Initial update
+            setInterval(updatePrices, 5000); // Update every 5 seconds
+        }
+
+        // Menu function (scrolls to subscription section)
+        function toggleSubscription() {
+            document.querySelector('.subscription-section').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        }
+
+        // Initialize app
+        init();
+    </script>
+</body>
+</html>
